@@ -57,3 +57,11 @@ def make_draft(*, final_pct=97, down_minor=10_000_000, count=7, **kwargs) -> dic
     db.session.commit()
     return {**ctx, "contract_id": contract_id, "final_minor": final_minor,
             "down_minor": down_minor, "count": count}
+
+def make_approved(**kwargs) -> dict:
+    """عقد معتمد جاهز للدفع. kwargs تذهب إلى make_draft."""
+    d = make_draft(**kwargs)
+    contracts_service.approve_contract(company_id=d["company_id"], accountant_id=accountant_id(),
+                                       contract_id=d["contract_id"])
+    db.session.commit()
+    return d

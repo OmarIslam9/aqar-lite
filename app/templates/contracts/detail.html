@@ -2,6 +2,11 @@
 {% block title %}عقد #{{ contract.id }}{% endblock %}
 {% block content %}
 {% set approved = contract.status == 'approved' %}
+
+{% for msg in [pay_errors.form, pay_errors.idempotency_key] if msg %}
+  <div class="alert" role="alert">{{ msg }}</div>
+{% endfor %}
+
 <div class="page-head">
   <h1>عقد رقم <span class="ltr">{{ contract.id }}</span></h1>
   <span class="badge badge-{{ contract.status }}">{{ CONTRACT_LABELS.get(contract.status, contract.status) }}</span>
@@ -41,6 +46,25 @@
 </form>
 {% endif %}
 
+{% if approved and g.user.role == 'accountant' %}
+<section class="card">
+  <h2>تسجيل دفعة</h2>
+  {% if totals.remaining_minor == 0 %}
+    <p class="muted">تم سداد كامل مبلغ العقد.</p>
+  {% else %}
+    <form class="inline-form" method="post" action="{{ url_for('contracts.pay', contract_id=contract.id) }}" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="idempotency_key" value="{{ pay_key }}">
+      <label for="amount">المبلغ</label>
+      <input id="amount" name="amount" class="ltr" inputmode="decimal" value="{{ pay_values.get('amount', '') }}" required>
+      <p class="muted">المتبقي من العقد: <span class="ltr">{{ totals.remaining_minor|money }}</span></p>
+      {% if pay_errors.amount %}<p class="field-error">{{ pay_errors.amount }}</p>{% endif %}
+      <button class="btn" type="submit">تسجيل الدفعة</button>
+    </form>
+  {% endif %}
+</section>
+{% endif %}
+
 <h2>جدول الأقساط{% if not approved %} <span class="muted">(مبدئي، يُثبَّت عند الاعتماد)</span>{% endif %}</h2>
 <div class="card table-wrap">
   <table>
@@ -64,4 +88,28 @@
     </tbody>
   </table>
 </div>
+
+{% if approved %}
+<h2>سجل الدفعات</h2>
+{% if not payments %}
+  <div class="card empty">لا توجد دفعات بعد.</div>
+{% else %}
+  <div class="card table-wrap">
+    <table>
+      <thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th><th>استلمها</th><th>التوزيع</th></tr></thead>
+      <tbody>
+        {% for p, receiver, allocs in payments %}
+        <tr>
+          <td class="ltr">{{ p.id }}</td>
+          <td class="ltr">{{ p.created_at|local_dt }}</td>
+          <td class="ltr">{{ p.amount_minor|money }}</td>
+          <td>{{ receiver }}</td>
+          <td>{% for seq, amt in allocs %}{{ 'الدفعة الأولى' if seq == 0 else 'القسط ' ~ seq }}: <span class="ltr">{{ amt|money }}</span>{% if not loop.last %}، {% endif %}{% endfor %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endif %}
+{% endif %}
 {% endblock %}

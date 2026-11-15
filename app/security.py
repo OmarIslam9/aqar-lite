@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from functools import wraps
 from .services import audit as audit_service
 from flask import abort, g, redirect, request, session, url_for
-from sqlalchemy import delete, func, or_, select
+from sqlalchemy import delete, func, select
 
 from .extensions import db
 from .models import AuditLog, AuthSession, User

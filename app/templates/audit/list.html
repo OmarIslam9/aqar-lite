@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% from "_pager.html" import pager %}
+{% block title %}سجل التدقيق{% endblock %}
+{% block content %}
+<h1>سجل التدقيق</h1>
+
+<form class="card filters" method="get" action="{{ url_for('audit.index') }}">
+  <label for="action">نوع الحدث</label>
+  <select id="action" name="action">
+    <option value="">الكل</option>
+    {% for key, label in AUDIT_ACTION_LABELS.items() %}
+      <option value="{{ key }}" {% if action == key %}selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select>
+  <div class="filter-actions">
+    <button class="btn" type="submit">تطبيق</button>
+    <a class="btn btn-light" href="{{ url_for('audit.index') }}">إعادة ضبط</a>
+  </div>
+</form>
+
+{% if errors %}
+  <div class="alert" role="alert">معاملات البحث غير صالحة.</div>
+{% elif not rows %}
+  <div class="card empty">لا توجد أحداث مطابقة.</div>
+{% else %}
+  <p class="muted">{{ total }} حدث. المبالغ بالهللات.</p>
+  <div class="card table-wrap">
+    <table>
+      <thead><tr><th>الوقت</th><th>المنفّذ</th><th>الحدث</th><th>الكيان</th><th>التفاصيل</th><th>IP</th></tr></thead>
+      <tbody>
+        {% for e, actor in rows %}
+        <tr>
+          <td class="ltr">{{ e.created_at|local_dt }}</td>
+          <td>{{ actor or '—' }}</td>
+          <td>{{ AUDIT_ACTION_LABELS.get(e.action, e.action) }}</td>
+          <td>{{ e.entity or '' }}{% if e.entity_id %} #{{ e.entity_id }}{% endif %}</td>
+          <td class="details">{{ e.details|compact_json }}</td>
+          <td class="ltr">{{ e.ip or '' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {{ pager('audit.index', page, pages, args) }}
+{% endif %}
+{% endblock %}

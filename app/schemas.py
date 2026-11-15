@@ -2,7 +2,7 @@ import re
 from datetime import date, timedelta
 from decimal import Decimal
 from typing import Literal
-
+from .labels import AUDIT_ACTION_LABELS
 from pydantic import (BaseModel, ConfigDict, Field, ValidationError,
                       field_validator, model_validator)
 from pydantic_core import PydanticCustomError
@@ -95,6 +95,23 @@ class ContractIn(BaseModel):
             raise PydanticCustomError("start_date_range", "start date out of range")
         return v
 
+class PaymentIn(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    amount: Decimal = Field(gt=0, max_digits=14, decimal_places=2)
+    idempotency_key: str = Field(pattern=r"^[A-Za-z0-9_-]{16,100}$")
+
+class AuditQuery(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    action: str | None = Field(default=None, max_length=50)
+    page: int = Field(default=1, ge=1, le=100000)
+    per_page: int = Field(default=25, ge=5, le=100)
+
+    @field_validator("action")
+    @classmethod
+    def _known_action(cls, v):
+        if v is not None and v not in AUDIT_ACTION_LABELS:
+            raise PydanticCustomError("literal_error", "unknown action")
+        return v
 
 MESSAGES = {
     "missing": "هذا الحقل مطلوب",
@@ -118,6 +135,11 @@ MESSAGES = {
 }
 
 
+FIELD_MESSAGES = {
+    "idempotency_key": "انتهت صلاحية النموذج. أعد تحميل الصفحة وحاول مرة أخرى",
+}
+
+
 def field_errors(exc: ValidationError) -> dict[str, str]:
     """يحوّل أخطاء Pydantic لرسائل عربية عامة بجانب كل حقل."""
     out: dict[str, str] = {}
@@ -127,5 +149,5 @@ def field_errors(exc: ValidationError) -> dict[str, str]:
             field = str(err["loc"][0])
         else:
             field = "max_price" if kind == "price_range" else "form"
-        out.setdefault(field, MESSAGES.get(kind, "قيمة غير صالحة"))
+        out.setdefault(field, FIELD_MESSAGES.get(field) or MESSAGES.get(kind, "قيمة غير صالحة"))
     return out

@@ -16,6 +16,7 @@
       <a href="{{ url_for('clients.index') }}">العملاء</a>
       <a href="{{ url_for('reservations.index') }}">الحجوزات</a>
                 <a href="{{ url_for('contracts.index') }}">العقود</a>
+                {% if g.user.role == 'manager' %}<a href="{{ url_for('audit.index') }}">سجل التدقيق</a>{% endif %}
     </nav>
     <div class="userbox">
       <span>{{ g.user.full_name }} · {{ ROLE_LABELS.get(g.user.role, g.user.role) }}</span>

@@ -57,3 +57,5 @@ textarea { width: 100%; padding: .6rem .7rem; border: 1px solid #b8c4bb; border-
 .badge-pending { background: #e0f2fe; color: #075985; }
 .badge-partial { background: #fef3c7; color: #92400e; }
 .badge-overdue { background: #fee2e2; color: #991b1b; }
+.inline-form { max-width: 420px; }
+.details { white-space: normal; word-break: break-word; max-width: 420px; font-size: .85rem; direction: ltr; text-align: left; }
