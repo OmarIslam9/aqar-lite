@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}تسجيل الدخول{% endblock %}
+{% block content %}
+<section class="card narrow">
+  <h1>تسجيل الدخول</h1>
+  {% if errors.form %}<div class="alert" role="alert">{{ errors.form }}</div>{% endif %}
+  <form method="post" action="{{ url_for('auth.login') }}" novalidate>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <label for="email">البريد الإلكتروني</label>
+    <input id="email" name="email" type="email" class="ltr" value="{{ email }}"
+           autocomplete="username" required>
+    {% if errors.email %}<p class="field-error">{{ errors.email }}</p>{% endif %}
+
+    <label for="password">كلمة المرور</label>
+    <input id="password" name="password" type="password" class="ltr"
+           autocomplete="current-password" required>
+    {% if errors.password %}<p class="field-error">{{ errors.password }}</p>{% endif %}
+
+    <button class="btn" type="submit">دخول</button>
+  </form>
+</section>
+{% endblock %}
