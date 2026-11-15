@@ -1,9 +1,18 @@
 {% extends "base.html" %}
 {% block content %}
-<section class="card">
+<section class="card hero">
+  <p class="eyebrow">{{ company.name }}</p>
   <h1>أهلاً {{ g.user.full_name }}</h1>
-  <p>الشركة: {{ company.name }}</p>
   <p>صلاحيتك: {{ ROLE_LABELS.get(g.user.role, g.user.role) }}</p>
-  <a class="btn" href="{{ url_for('units.index') }}">عرض الوحدات</a>
 </section>
+
+<div class="tiles">
+  <a class="tile" href="{{ url_for('units.index') }}"><strong>الوحدات</strong><span>تصفّح الوحدات وفلترتها</span></a>
+  <a class="tile" href="{{ url_for('clients.index') }}"><strong>العملاء</strong><span>بيانات العملاء وملاحظاتهم</span></a>
+  <a class="tile" href="{{ url_for('reservations.index') }}"><strong>الحجوزات</strong><span>الحجوزات النشطة والمنتهية</span></a>
+  <a class="tile" href="{{ url_for('contracts.index') }}"><strong>العقود</strong><span>العقود وجداول الأقساط</span></a>
+  {% if g.user.role == 'manager' %}
+  <a class="tile" href="{{ url_for('audit.index') }}"><strong>سجل التدقيق</strong><span>كل الأحداث المهمة في شركتك</span></a>
+  {% endif %}
+</div>
 {% endblock %}
