@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}{{ 'تعديل عميل' if client else 'إضافة عميل' }}{% endblock %}
+{% block content %}
+<section class="card narrow">
+  <h1>{{ 'تعديل عميل' if client else 'إضافة عميل' }}</h1>
+  <form method="post" novalidate
+        action="{{ url_for('clients.update', client_id=client.id) if client else url_for('clients.create') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <label for="name">الاسم</label>
+    <input id="name" name="name" value="{{ values.get('name', '') }}" required>
+    {% if errors.name %}<p class="field-error">{{ errors.name }}</p>{% endif %}
+
+    <label for="phone">الهاتف</label>
+    <input id="phone" name="phone" class="ltr" inputmode="tel" value="{{ values.get('phone', '') }}" required>
+    {% if errors.phone %}<p class="field-error">{{ errors.phone }}</p>{% endif %}
+
+    <label for="notes">ملاحظات</label>
+    <textarea id="notes" name="notes" rows="5">{{ values.get('notes', '') }}</textarea>
+    {% if errors.notes %}<p class="field-error">{{ errors.notes }}</p>{% endif %}
+
+    <button class="btn" type="submit">حفظ</button>
+    <a class="btn btn-light" href="{{ url_for('clients.detail', client_id=client.id) if client else url_for('clients.index') }}">إلغاء</a>
+  </form>
+</section>
+{% endblock %}

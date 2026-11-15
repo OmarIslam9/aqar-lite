@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}عقد #{{ contract.id }}{% endblock %}
+{% block content %}
+{% set approved = contract.status == 'approved' %}
+<div class="page-head">
+  <h1>عقد رقم <span class="ltr">{{ contract.id }}</span></h1>
+  <span class="badge badge-{{ contract.status }}">{{ CONTRACT_LABELS.get(contract.status, contract.status) }}</span>
+</div>
+
+{% if not approved and reservation.status != 'active' %}
+  <div class="alert" role="alert">انتهى حجز الوحدة، ولا يمكن اعتماد هذا العقد.</div>
+{% endif %}
+
+<section class="card">
+  <dl class="info-grid">
+    <div><dt>الوحدة</dt><dd>{{ unit.project }} · <span class="ltr">{{ unit.number }}</span></dd></div>
+    <div><dt>العميل</dt><dd><a href="{{ url_for('clients.detail', client_id=client.id) }}">{{ client.name }}</a></dd></div>
+    <div><dt>المندوب</dt><dd>{{ sales_name }}</dd></div>
+    <div><dt>سعر الوحدة</dt><dd class="ltr">{{ contract.list_price_minor|money }}</dd></div>
+    <div><dt>السعر النهائي</dt><dd class="ltr">{{ contract.final_price_minor|money }}</dd></div>
+    <div><dt>الدفعة الأولى</dt><dd class="ltr">{{ contract.down_payment_minor|money }}</dd></div>
+    <div><dt>عدد الأقساط</dt><dd>{{ contract.installments_count }}</dd></div>
+    <div><dt>تاريخ البداية</dt><dd class="ltr">{{ contract.start_date }}</dd></div>
+    {% if contract.approved_at %}
+      <div><dt>تاريخ الاعتماد</dt><dd class="ltr">{{ contract.approved_at|local_dt }}</dd></div>
+    {% endif %}
+  </dl>
+</section>
+
+{% if approved %}
+<section class="card summary">
+  <div><span class="muted">إجمالي المدفوع</span><strong class="ltr">{{ totals.paid_minor|money }}</strong></div>
+  <div><span class="muted">المبلغ المتبقي</span><strong class="ltr">{{ totals.remaining_minor|money }}</strong></div>
+</section>
+{% endif %}
+
+{% if not approved and g.user.role == 'accountant' and reservation.status == 'active' %}
+<form method="post" action="{{ url_for('contracts.approve', contract_id=contract.id) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <button class="btn" type="submit">اعتماد العقد</button>
+</form>
+{% endif %}
+
+<h2>جدول الأقساط{% if not approved %} <span class="muted">(مبدئي، يُثبَّت عند الاعتماد)</span>{% endif %}</h2>
+<div class="card table-wrap">
+  <table>
+    <thead>
+      <tr><th>القسط</th><th>تاريخ الاستحقاق</th><th>المبلغ</th>
+        {% if approved %}<th>المدفوع</th><th>المتبقي</th><th>الحالة</th>{% endif %}</tr>
+    </thead>
+    <tbody>
+      {% for r in rows %}
+      <tr>
+        <td>{% if r.seq == 0 %}الدفعة الأولى{% else %}القسط {{ r.seq }}{% endif %}</td>
+        <td class="ltr">{{ r.due_date }}</td>
+        <td class="ltr">{{ r.amount_minor|money }}</td>
+        {% if approved %}
+          <td class="ltr">{{ r.paid_minor|money }}</td>
+          <td class="ltr">{{ (r.amount_minor - r.paid_minor)|money }}</td>
+          <td><span class="badge badge-{{ r.status }}">{{ INSTALLMENT_LABELS.get(r.status, r.status) }}</span></td>
+        {% endif %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

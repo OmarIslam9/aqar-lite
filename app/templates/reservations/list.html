@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% from "_pager.html" import pager %}
+{% block title %}الحجوزات{% endblock %}
+{% block content %}
+<h1>الحجوزات</h1>
+{% set RL = {'active': 'نشط', 'expired': 'منتهي', 'converted': 'تحوّل لعقد'} %}
+{% if errors %}
+  <div class="alert" role="alert">معاملات الصفحة غير صالحة.</div>
+{% elif not rows %}
+  <div class="card empty">لا توجد حجوزات.</div>
+{% else %}
+  <p class="muted">{{ total }} حجز</p>
+  <div class="card table-wrap">
+    <table>
+      <thead><tr><th>الوحدة</th><th>العميل</th><th>الحالة</th><th>تنتهي في</th><th></th></tr></thead>
+      <tbody>
+        {% for r, unit, client, contract_id in rows %}
+        <tr>
+          <td>{{ unit.project }} · <span class="ltr">{{ unit.number }}</span></td>
+          <td><a href="{{ url_for('clients.detail', client_id=client.id) }}">{{ client.name }}</a></td>
+          <td><span class="badge badge-{{ r.status }}">{{ RL.get(r.status, r.status) }}</span></td>
+          <td class="ltr">{{ r.expires_at|local_dt }}</td>
+          <td>
+            {% if contract_id %}
+              <a href="{{ url_for('contracts.detail', contract_id=contract_id) }}">العقد</a>
+            {% elif g.user.role == 'sales' and r.status == 'active' and r.sales_id == g.user.id %}
+              <a href="{{ url_for('contracts.new_form', reservation_id=r.id) }}">إنشاء عقد</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {{ pager('reservations.index', page, pages, {}) }}
+{% endif %}
+{% endblock %}

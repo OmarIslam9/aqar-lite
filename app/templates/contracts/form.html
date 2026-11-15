@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}إنشاء عقد{% endblock %}
+{% block content %}
+<section class="card narrow">
+  <h1>إنشاء عقد (مسودة)</h1>
+  <p><strong>{{ unit.project }}</strong> · <span class="ltr">{{ unit.number }}</span> · {{ unit.type }}</p>
+  <p>العميل: {{ client.name }}</p>
+  <p>سعر الوحدة: <span class="ltr">{{ unit.price_minor|money }}</span></p>
+  <p>ينتهي الحجز: <span class="ltr">{{ reservation.expires_at|local_dt }}</span></p>
+
+  {% if errors.form %}<div class="alert" role="alert">{{ errors.form }}</div>{% endif %}
+
+  {% if existing_contract_id %}
+    <div class="alert" role="alert">يوجد عقد لهذا الحجز بالفعل.</div>
+    <a class="btn" href="{{ url_for('contracts.detail', contract_id=existing_contract_id) }}">فتح العقد</a>
+  {% elif reservation.status != 'active' %}
+    <div class="alert" role="alert">هذا الحجز لم يعد نشطاً.</div>
+    <a class="btn btn-light" href="{{ url_for('reservations.index') }}">رجوع للحجوزات</a>
+  {% else %}
+    <form method="post" action="{{ url_for('contracts.create') }}" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="reservation_id" value="{{ reservation.id }}">
+
+      <label for="final_price">السعر النهائي</label>
+      <input id="final_price" name="final_price" class="ltr" inputmode="decimal" value="{{ values.get('final_price', '') }}" required>
+      <p class="muted">الحد الأدنى المسموح (خصم 5%): <span class="ltr">{{ min_final|money }}</span></p>
+      {% if errors.final_price %}<p class="field-error">{{ errors.final_price }}</p>{% endif %}
+
+      <label for="down_payment">الدفعة الأولى</label>
+      <input id="down_payment" name="down_payment" class="ltr" inputmode="decimal" value="{{ values.get('down_payment', '') }}" required>
+      {% if errors.down_payment %}<p class="field-error">{{ errors.down_payment }}</p>{% endif %}
+
+      <label for="installments_count">عدد الأقساط الشهرية</label>
+      <input id="installments_count" name="installments_count" class="ltr" inputmode="numeric" value="{{ values.get('installments_count', '') }}" required>
+      {% if errors.installments_count %}<p class="field-error">{{ errors.installments_count }}</p>{% endif %}
+
+      <label for="start_date">تاريخ بداية العقد</label>
+      <input id="start_date" name="start_date" type="date" class="ltr" value="{{ values.get('start_date', '') }}" required>
+      {% if errors.start_date %}<p class="field-error">{{ errors.start_date }}</p>{% endif %}
+
+      <button class="btn" type="submit">إنشاء المسودة</button>
+      <a class="btn btn-light" href="{{ url_for('reservations.index') }}">إلغاء</a>
+    </form>
+  {% endif %}
+</section>
+{% endblock %}

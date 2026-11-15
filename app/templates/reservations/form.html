@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}حجز وحدة{% endblock %}
+{% block content %}
+<section class="card narrow">
+  <h1>حجز وحدة</h1>
+  <p><strong>{{ unit.project }}</strong> · <span class="ltr">{{ unit.number }}</span> · {{ unit.type }}</p>
+  <p>السعر: <span class="ltr">{{ unit.price_minor|money }}</span></p>
+
+  {% if errors.form %}<div class="alert" role="alert">{{ errors.form }}</div>{% endif %}
+
+  {% if unit.status != 'available' %}
+    <div class="alert" role="alert">هذه الوحدة غير متاحة للحجز ({{ STATUS_LABELS.get(unit.status) }}).</div>
+    <a class="btn btn-light" href="{{ url_for('units.index') }}">رجوع للوحدات</a>
+  {% elif not clients %}
+    <p class="muted">لا يوجد لديك عملاء. أضف عميلاً أولاً.</p>
+    <a class="btn" href="{{ url_for('clients.new_form') }}">إضافة عميل</a>
+  {% else %}
+    <form method="post" action="{{ url_for('reservations.create') }}" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="unit_id" value="{{ unit.id }}">
+      <label for="client_id">العميل</label>
+      <select id="client_id" name="client_id" required>
+        <option value="">اختر العميل</option>
+        {% for c in clients %}
+          <option value="{{ c.id }}" {% if values.get('client_id') == c.id|string %}selected{% endif %}>{{ c.name }}</option>
+        {% endfor %}
+      </select>
+      {% if errors.client_id %}<p class="field-error">{{ errors.client_id }}</p>{% endif %}
+      <p class="muted">الحجز صالح لمدة 72 ساعة.</p>
+      <button class="btn" type="submit">تأكيد الحجز</button>
+      <a class="btn btn-light" href="{{ url_for('units.index') }}">إلغاء</a>
+    </form>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,9 @@
+{% macro pager(endpoint, page, pages, args) %}
+{% if pages > 1 %}
+<nav class="pager" aria-label="الصفحات">
+  {% if page > 1 %}<a class="btn btn-light" href="{{ url_for(endpoint, page=page - 1, **args) }}">السابق</a>{% endif %}
+  <span>صفحة {{ page }} من {{ pages }}</span>
+  {% if page < pages %}<a class="btn btn-light" href="{{ url_for(endpoint, page=page + 1, **args) }}">التالي</a>{% endif %}
+</nav>
+{% endif %}
+{% endmacro %}

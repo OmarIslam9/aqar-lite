@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}الوحدات{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>الوحدات</h1>
+  {% if g.user.role == 'manager' %}
+    <a class="btn" href="{{ url_for('units.new_form') }}">إضافة وحدة</a>
+  {% endif %}
+</div>
+
+<form class="card filters" method="get" action="{{ url_for('units.index') }}" novalidate>
+  <div class="filter-grid">
+    <div>
+      <label for="status">الحالة</label>
+      <select id="status" name="status">
+        <option value="">الكل</option>
+        {% for key, label in STATUS_LABELS.items() %}
+          <option value="{{ key }}" {% if args.get('status') == key %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      {% if errors.status %}<p class="field-error">{{ errors.status }}</p>{% endif %}
+    </div>
+    <div>
+      <label for="min_price">السعر من</label>
+      <input id="min_price" name="min_price" class="ltr" inputmode="decimal" value="{{ args.get('min_price', '') }}">
+      {% if errors.min_price %}<p class="field-error">{{ errors.min_price }}</p>{% endif %}
+    </div>
+    <div>
+      <label for="max_price">السعر إلى</label>
+      <input id="max_price" name="max_price" class="ltr" inputmode="decimal" value="{{ args.get('max_price', '') }}">
+      {% if errors.max_price %}<p class="field-error">{{ errors.max_price }}</p>{% endif %}
+    </div>
+    <div>
+      <label for="sort">الترتيب</label>
+      <select id="sort" name="sort">
+        {% for key, label in [('price', 'السعر: الأقل أولاً'), ('-price', 'السعر: الأعلى أولاً'),
+                              ('area', 'المساحة: الأصغر أولاً'), ('-area', 'المساحة: الأكبر أولاً')] %}
+          <option value="{{ key }}" {% if args.get('sort', 'price') == key %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      {% if errors.sort %}<p class="field-error">{{ errors.sort }}</p>{% endif %}
+    </div>
+  </div>
+  {% if errors.form or errors.page or errors.per_page %}
+    <p class="field-error">{{ errors.form or errors.page or errors.per_page }}</p>
+  {% endif %}
+  <div class="filter-actions">
+    <button class="btn" type="submit">تطبيق</button>
+    <a class="btn btn-light" href="{{ url_for('units.index') }}">إعادة ضبط</a>
+  </div>
+</form>
+
+{% if errors %}
+  <div class="alert" role="alert">تحقق من قيم الفلترة المُدخلة.</div>
+{% elif not units %}
+  <div class="card empty">لا توجد وحدات مطابقة.</div>
+{% else %}
+  <p class="muted">{{ total }} وحدة</p>
+  <div class="card table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>المشروع</th><th>الرقم</th><th>النوع</th><th>المساحة (م²)</th>
+          <th>الغرف</th><th>السعر</th><th>الحالة</th>
+          {% if g.user.role in ('manager', 'sales') %}<th></th>{% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in units %}
+        <tr>
+          <td>{{ u.project }}</td>
+          <td class="ltr">{{ u.number }}</td>
+          <td>{{ u.type }}</td>
+          <td>{{ u.area_sqm }}</td>
+          <td>{{ u.rooms }}</td>
+          <td class="ltr">{{ u.price_minor|money }}</td>
+          <td><span class="badge badge-{{ u.status }}">{{ STATUS_LABELS.get(u.status, u.status) }}</span></td>
+                    {% if g.user.role == 'manager' %}
+            <td><a href="{{ url_for('units.edit_form', unit_id=u.id) }}">تعديل</a></td>
+          {% elif g.user.role == 'sales' %}
+            <td>{% if u.status == 'available' %}<a href="{{ url_for('reservations.new_form', unit_id=u.id) }}">حجز</a>{% endif %}</td>
+          {% endif %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if pages > 1 %}
+  <nav class="pager" aria-label="الصفحات">
+    {% if q.page > 1 %}<a class="btn btn-light" href="{{ url_for('units.index', page=q.page - 1, **base_args) }}">السابق</a>{% endif %}
+    <span>صفحة {{ q.page }} من {{ pages }}</span>
+    {% if q.page < pages %}<a class="btn btn-light" href="{{ url_for('units.index', page=q.page + 1, **base_args) }}">التالي</a>{% endif %}
+  </nav>
+  {% endif %}
+{% endif %}
+{% endblock %}

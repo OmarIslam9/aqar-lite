@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}{{ client.name }}{% endblock %}
+{% block content %}
+<section class="card">
+  <div class="page-head">
+    <h1>{{ client.name }}</h1>
+    {% if g.user.role == 'sales' %}<a class="btn" href="{{ url_for('clients.edit_form', client_id=client.id) }}">تعديل</a>{% endif %}
+  </div>
+  <p>الهاتف: <span class="ltr">{{ client.phone }}</span></p>
+  <p>المندوب: {{ owner_name }}</p>
+  <h2>ملاحظات</h2>
+  {% if client.notes %}<p class="notes">{{ client.notes }}</p>{% else %}<p class="muted">لا توجد ملاحظات.</p>{% endif %}
+</section>
+
+<h2>الحجوزات</h2>
+{% set RL = {'active': 'نشط', 'expired': 'منتهي', 'converted': 'تحوّل لعقد'} %}
+{% if not reservations %}
+  <div class="card empty">لا توجد حجوزات لهذا العميل.</div>
+{% else %}
+  <div class="card table-wrap">
+    <table>
+      <thead><tr><th>الوحدة</th><th>الحالة</th><th>تنتهي في</th></tr></thead>
+      <tbody>
+                {% for r, unit, _c, _cid in reservations %}
+        <tr>
+          <td>{{ unit.project }} · <span class="ltr">{{ unit.number }}</span></td>
+          <td><span class="badge badge-{{ r.status }}">{{ RL.get(r.status, r.status) }}</span></td>
+          <td class="ltr">{{ r.expires_at|local_dt }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% from "_pager.html" import pager %}
+{% block title %}العقود{% endblock %}
+{% block content %}
+<h1>العقود</h1>
+{% if errors %}
+  <div class="alert" role="alert">معاملات الصفحة غير صالحة.</div>
+{% elif not rows %}
+  <div class="card empty">لا توجد عقود.</div>
+{% else %}
+  <p class="muted">{{ total }} عقد</p>
+  <div class="card table-wrap">
+    <table>
+      <thead>
+        <tr><th>رقم</th><th>الوحدة</th><th>العميل</th>
+          {% if g.user.role != 'sales' %}<th>المندوب</th>{% endif %}
+          <th>السعر النهائي</th><th>الحالة</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for c, unit, client, sales_name in rows %}
+        <tr>
+          <td class="ltr">{{ c.id }}</td>
+          <td>{{ unit.project }} · <span class="ltr">{{ unit.number }}</span></td>
+          <td>{{ client.name }}</td>
+          {% if g.user.role != 'sales' %}<td>{{ sales_name }}</td>{% endif %}
+          <td class="ltr">{{ c.final_price_minor|money }}</td>
+          <td><span class="badge badge-{{ c.status }}">{{ CONTRACT_LABELS.get(c.status, c.status) }}</span></td>
+          <td><a href="{{ url_for('contracts.detail', contract_id=c.id) }}">عرض</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {{ pager('contracts.index', page, pages, {}) }}
+{% endif %}
+{% endblock %}

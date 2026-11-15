@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}{{ 'تعديل وحدة' if unit else 'إضافة وحدة' }}{% endblock %}
+
+{% macro field(name, label, values, errors, ltr=False, numeric=False, readonly=False) %}
+  <label for="{{ name }}">{{ label }}</label>
+  <input id="{{ name }}" name="{{ name }}" value="{{ values.get(name, '') }}"
+         {% if ltr %}class="ltr"{% endif %}
+         {% if numeric %}inputmode="decimal"{% endif %}
+         {% if readonly %}readonly{% endif %} required>
+  {% if errors.get(name) %}<p class="field-error">{{ errors[name] }}</p>{% endif %}
+{% endmacro %}
+
+{% block content %}
+<section class="card narrow">
+  <h1>{{ 'تعديل وحدة' if unit else 'إضافة وحدة' }}</h1>
+  <form method="post" novalidate
+        action="{{ url_for('units.update', unit_id=unit.id) if unit else url_for('units.create') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {{ field('project', 'المشروع', values, errors) }}
+    {{ field('number', 'رقم الوحدة', values, errors, ltr=True) }}
+    {{ field('type', 'النوع', values, errors) }}
+    {{ field('area_sqm', 'المساحة (م²)', values, errors, ltr=True, numeric=True) }}
+    {{ field('rooms', 'عدد الغرف', values, errors, ltr=True, numeric=True) }}
+    {% set locked = unit and unit.status != 'available' %}
+    {{ field('price', 'السعر', values, errors, ltr=True, numeric=True, readonly=locked) }}
+    {% if locked %}<p class="muted">السعر مقفل لأن الوحدة {{ STATUS_LABELS.get(unit.status) }}.</p>{% endif %}
+    <button class="btn" type="submit">حفظ</button>
+    <a class="btn btn-light" href="{{ url_for('units.index') }}">إلغاء</a>
+  </form>
+</section>
+{% endblock %}

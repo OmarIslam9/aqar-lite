@@ -3,7 +3,7 @@ import hmac
 import secrets
 from datetime import datetime, timedelta, timezone
 from functools import wraps
-
+from .services import audit as audit_service
 from flask import abort, g, redirect, request, session, url_for
 from sqlalchemy import delete, func, or_, select
 
@@ -118,11 +118,11 @@ def audit(action: str, entity: str | None = None, entity_id: int | None = None,
           details: dict | None = None, company_id: int | None = None,
           actor_id: int | None = None) -> None:
     user = getattr(g, "user", None)
-    db.session.add(AuditLog(
+    audit_service.record(
         company_id=company_id if company_id is not None else (user.company_id if user else None),
         actor_id=actor_id if actor_id is not None else (user.id if user else None),
         action=action, entity=entity, entity_id=entity_id,
-        details=details or {}, ip=request.remote_addr))
+        details=details, ip=request.remote_addr)
 
 
 # ---------- حماية من تخمين كلمات المرور ----------

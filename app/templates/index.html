@@ -4,5 +4,6 @@
   <h1>أهلاً {{ g.user.full_name }}</h1>
   <p>الشركة: {{ company.name }}</p>
   <p>صلاحيتك: {{ ROLE_LABELS.get(g.user.role, g.user.role) }}</p>
+  <a class="btn" href="{{ url_for('units.index') }}">عرض الوحدات</a>
 </section>
 {% endblock %}
